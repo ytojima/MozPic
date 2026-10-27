@@ -19,7 +19,6 @@
 npm install
 npm run dev     # 開発サーバ
 npm run build   # 本番ビルド（dist/）
-npm run ogp     # OGP 画像（public/ogp.png）を ogp.html から再生成（要 Chrome）
 ```
 
 ## デプロイ

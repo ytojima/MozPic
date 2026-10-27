@@ -8,11 +8,12 @@ import {
 import { renderMosaic } from './mosaic'
 import { PALETTES, getPaletteColors } from './palettes'
 import {
-  ANIMATIONS, ANIM_LOOP, BG_SWATCHES, DEFAULTS, EMOJI_SETS, PATTERNS, PATTERN_HINTS, PRESETS, SHAPE_PATTERNS, STILL_PATTERNS, randomOpts,
+  ANIMATIONS, BG_SWATCHES, DEFAULTS, EMOJI_SETS, PATTERNS, PATTERN_HINTS, PRESETS, SHAPE_PATTERNS, STILL_PATTERNS, randomOpts,
 } from './config'
 import { makeSampleImage } from './sample'
 import LiquidTabs from './LiquidTabs'
 import { startAmbient } from './ambient'
+import { exportLoopVideo } from './video'
 import './App.css'
 
 const FAV_KEY = 'mozpic:favs'
@@ -147,8 +148,9 @@ export default function App() {
     const w0 = el.naturalWidth || el.width, h0 = el.naturalHeight || el.height
     const k = opts.outSize / Math.max(w0, h0)
     const cv = document.createElement('canvas')
-    cv.width = Math.max(1, Math.round(w0 * k))
-    cv.height = Math.max(1, Math.round(h0 * k))
+    // Even dimensions: H.264 video export requires them
+    cv.width = Math.max(2, Math.round((w0 * k) / 2) * 2)
+    cv.height = Math.max(2, Math.round((h0 * k) / 2) * 2)
     const ctx = cv.getContext('2d', { willReadFrequently: true })
     ctx.imageSmoothingQuality = 'high'
     ctx.drawImage(el, 0, 0, cv.width, cv.height)
@@ -157,6 +159,18 @@ export default function App() {
 
   const animating = opts.anim !== 'none'
 
+  // Text-art draws DotGothic16 into the canvas: fetch the glyph subsets it needs, then redraw
+  const [fontTick, setFontTick] = useState(0)
+  useEffect(() => {
+    if (opts.pattern !== 'ascii') return
+    const spec = '16px "DotGothic16"'
+    const chars = `${opts.text || ''} .:-=+*#%@`
+    if (document.fonts.check(spec, chars)) return
+    let alive = true
+    document.fonts.load(spec, chars).then(() => alive && setFontTick((n) => n + 1))
+    return () => { alive = false }
+  }, [opts.pattern, opts.text])
+
   useEffect(() => {
     if (!src || !canvasRef.current || animating) return
     const id = requestAnimationFrame(() => {
@@ -164,7 +178,7 @@ export default function App() {
       updateAmbient()
     })
     return () => cancelAnimationFrame(id)
-  }, [src, opts, animating, updateAmbient])
+  }, [src, opts, animating, updateAmbient, fontTick])
 
   // Animation loop: reads the latest opts from the ref so slider changes apply live
   useEffect(() => {
@@ -195,38 +209,32 @@ export default function App() {
     set('anim', id)
   }
 
-  // Records exactly one loop so the video repeats seamlessly
-  const recordVideo = () => {
-    if (recProgress !== null || !animating) return
-    const mime = ['video/webm;codecs=vp9', 'video/webm', 'video/mp4'].find((m) => window.MediaRecorder?.isTypeSupported(m))
-    if (!mime) {
-      setNotice('このブラウザは動画の保存に対応していません')
-      return
-    }
-    const rec = new MediaRecorder(canvasRef.current.captureStream(30), { mimeType: mime, videoBitsPerSecond: 8_000_000 })
-    const chunks = []
-    rec.ondataavailable = (e) => e.data.size && chunks.push(e.data)
-    rec.onstop = () => {
+  // Exports exactly one loop as MP4 (H.264) so it plays on iPhone too, and repeats seamlessly
+  const recordVideo = async () => {
+    if (recProgress !== null || !animating || !src) return
+    setNotice('')
+    setRecProgress(0)
+    try {
+      const result = await exportLoopVideo({
+        src,
+        opts: optsRef.current,
+        liveCanvas: canvasRef.current,
+        onProgress: setRecProgress,
+      })
+      if (!result) {
+        setNotice('このブラウザは動画の保存に対応していません')
+        return
+      }
       const a = document.createElement('a')
-      a.href = URL.createObjectURL(new Blob(chunks, { type: mime }))
-      a.download = `mozpic-${optsRef.current.pattern}-${optsRef.current.anim}.${mime.includes('mp4') ? 'mp4' : 'webm'}`
+      a.href = URL.createObjectURL(result.blob)
+      a.download = `mozpic-${optsRef.current.pattern}-${optsRef.current.anim}.${result.ext}`
       a.click()
       setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+    } catch {
+      setNotice('動画の書き出しに失敗しました')
+    } finally {
       setRecProgress(null)
     }
-    animT.current = 0
-    setPlaying(true)
-    rec.start()
-    const duration = (ANIM_LOOP / optsRef.current.animSpeed) * 1000
-    const started = performance.now()
-    setRecProgress(0)
-    const timer = setInterval(() => {
-      const p = (performance.now() - started) / duration
-      if (p >= 1) {
-        clearInterval(timer)
-        rec.stop()
-      } else setRecProgress(p)
-    }, 100)
   }
 
   const set = (key, value) => setOpts((o) => ({ ...o, [key]: value }))
@@ -491,7 +499,7 @@ export default function App() {
                     <Slider label="スピード" value={opts.animSpeed} min={0.25} max={3} step={0.25} onChange={(v) => set('animSpeed', v)} fmt={(v) => `×${v}`} />
                     <button className={`rec ${recProgress !== null ? 'on' : ''}`} onClick={recordVideo} disabled={recProgress !== null}>
                       <FontAwesomeIcon icon={faCircleDot} />
-                      {recProgress !== null ? ` 録画中… ${Math.round(recProgress * 100)}%` : ' 動画で保存'}
+                      {recProgress !== null ? ` 書き出し中… ${Math.round(recProgress * 100)}%` : ' 動画で保存'}
                       {recProgress !== null && <i style={{ width: `${recProgress * 100}%` }} />}
                     </button>
                   </>

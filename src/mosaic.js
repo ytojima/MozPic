@@ -353,7 +353,7 @@ function drawTiles(ctx, src, opts, rng, colorize, sample, anim = 'none', time = 
   if (pattern === 'ascii') {
     textChars = [...(opts.text || 'モザイク')].filter((ch) => ch.trim())
     if (!textChars.length) textChars = ['■']
-    ctx.font = `800 ${s * (opts.asciiMode === 'text' ? 0.95 : 1.2)}px "M PLUS Rounded 1c","Hiragino Sans",monospace`
+    ctx.font = `${s * (opts.asciiMode === 'text' ? 0.95 : 1.2)}px "DotGothic16","Hiragino Sans",monospace`
   }
   if (pattern === 'crossstitch') {
     ctx.strokeStyle = 'rgba(0,0,0,0.07)'

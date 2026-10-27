@@ -10,7 +10,9 @@
   --pink: #ff5c8a;
   --radius: 20px;
   --space: 24px;
-  font-family: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', system-ui, sans-serif;
+  font-family: 'DotGothic16', 'Hiragino Sans', system-ui, sans-serif;
+  /* DotGothic16 has a single weight; faux bold would smear the pixels, so hierarchy comes from size */
+  font-synthesis: none;
   color: var(--ink);
   -webkit-tap-highlight-color: transparent;
 }
@@ -24,7 +26,7 @@ button:disabled { opacity: 0.35; cursor: default; }
 
 /* ---------- Header ---------- */
 .topbar { display: flex; align-items: center; gap: 10px; padding: 20px 0; }
-.logo { display: flex; align-items: center; gap: 10px; margin-right: auto; font-size: 20px; font-weight: 800; letter-spacing: 0.02em; }
+.logo { display: flex; align-items: center; gap: 10px; margin-right: auto; font-size: 22px; font-weight: 800; letter-spacing: 0.02em; }
 .logo-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 22px; height: 22px; }
 .logo-tiles i { border-radius: 3px; }
 .logo-tiles i:nth-child(1) { background: var(--pink); }
@@ -87,7 +89,7 @@ button:disabled { opacity: 0.35; cursor: default; }
   position: relative; z-index: 1; overflow: hidden;
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
   padding: 9px 0 7px; border: none; border-radius: 999px; background: none;
-  font-size: 10px; font-weight: 700; color: var(--muted); transition: color 0.2s;
+  font-size: 11px; font-weight: 700; color: var(--muted); transition: color 0.2s;
 }
 .tabs button svg { font-size: 15px; }
 .tabs button.on { color: #fff; transition: color 0.25s 0.12s; }
@@ -139,7 +141,7 @@ button:disabled { opacity: 0.35; cursor: default; }
 .tile {
   display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0;
   padding: 14px 4px 12px; border: none; border-radius: 14px; background: var(--soft);
-  font-size: 11px; font-weight: 700; transition: background 0.15s, color 0.15s;
+  font-size: 12px; font-weight: 700; transition: background 0.15s, color 0.15s;
 }
 .tile span { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tile svg { font-size: 20px; color: var(--muted); transition: transform 0.2s, color 0.15s; }
