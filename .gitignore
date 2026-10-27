@@ -1,0 +1,25 @@
+# Dependencies
+node_modules
+
+# Build output (GitHub Actions builds and deploys it)
+dist
+*.tsbuildinfo
+
+# Local env overrides (.env holds only non-secret defaults and stays tracked)
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE / editor
+.idea
+*.iml
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
