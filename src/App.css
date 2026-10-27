@@ -462,3 +462,18 @@ body { transition: background-color 0.3s; }
 @media (min-width: 1000px) {
   .privacy { margin-bottom: 28px; }
 }
+
+/* ---------- Touch devices: lighter glass ----------
+   Every glass pane re-blurs whatever moves behind it (the drifting ambient, scrolling content)
+   each frame, which mobile GPUs can't keep up with. Use smaller blur radii and drop the
+   pointer-following light, whose fixed-attachment background forces repaints on scroll. */
+@media (hover: none) {
+  :root { --glass-blur: blur(10px) saturate(160%); }
+  .btn.ghost::before, .stage::before, .icon-btn::before, .tabs::before, .panel::before,
+  .btn:not(.ghost)::before, .gacha::before {
+    background: linear-gradient(155deg, var(--sheen-top) 0%, transparent 38%, transparent 70%, var(--sheen-tail) 100%);
+  }
+  .btn:not(.ghost), .gacha { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .rec { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .stage-col { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+}

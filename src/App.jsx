@@ -131,8 +131,10 @@ export default function App() {
   const updateAmbient = useCallback(() => ambientCtl.current?.setSource(canvasRef.current), [])
 
   useEffect(() => {
-    // SVG refraction inside backdrop-filter only renders in Chromium; others keep plain frosted glass
-    if (navigator.userAgentData?.brands?.some((b) => b.brand === 'Chromium')) document.documentElement.classList.add('refract')
+    // SVG refraction inside backdrop-filter only renders in Chromium; others keep plain frosted glass.
+    // It is rasterized on the CPU every frame, so phones (Android Chrome) skip it to stay smooth.
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches
+    if (finePointer && navigator.userAgentData?.brands?.some((b) => b.brand === 'Chromium')) document.documentElement.classList.add('refract')
     // Specular light follows the pointer across every glass surface
     let raf = 0
     const onMove = (e) => {
